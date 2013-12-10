@@ -1,0 +1,7 @@
+to automate startup of *Monitoring.py
+
+add to rc.local file
+
+nohup ./home/ubuntu/MonitoringScripts/cassandraSetup.py &
+nohup ./home/ubuntu/MonitoringScripts/SarMonitoring.py &
+nohup ./home/ubuntu/MonitoringScripts/CassandraMonitoring.py &
