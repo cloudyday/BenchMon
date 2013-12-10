@@ -1,0 +1,69 @@
+{\rtf1\ansi\ansicpg1252\cocoartf1265
+{\fonttbl\f0\fswiss\fcharset0 Helvetica;}
+{\colortbl;\red255\green255\blue255;}
+\paperw11900\paperh16840\margl1440\margr1440\vieww20640\viewh13540\viewkind0
+\pard\tx566\tx1133\tx1700\tx2267\tx2834\tx3401\tx3968\tx4535\tx5102\tx5669\tx6236\tx6803\pardirnatural
+
+\f0\b\fs28 \cf0 Introduction to the BenchMon Framework\
+\
+
+\b0\fs24 BenchMon is a framework designed to aid in conducting experiments and collecting monitoring data. The basic idea is to use a messaging architecture to connect all participating nodes, such as a controller, a workload generator and database nodes. The controller sends information about the experiment to all nodes, e.g. date and name of the experiment, how long data collection shall run before(after) the workload has started(is done), where the data shall be uploaded, etc. Next, there needs to be a start command after which all nodes start collecting data or run the workload generator. A stop command must be issued so that all nodes halt their collection efforts. The stop command could be sent by the node, which controls the workload generator.\
+\
+So this was the basic idea of what BenchMon facilitates. The current implementation supports YCSB, Cassandra and sysstat. The BenchMon daemon for YCSB sends the start command after receiving the configuration message from the controller. The YCSB daemon then runs the workload generator and when it has finished, it sends the stop command to all other nodes. The Cassandra daemon and the sysstat daemon live on each Cassandra node. Both start collecting data from Cassandra (using nodetool) and from the machine (using sar) and halt their efforts after the stop command is received. All nodes upload their collected data to Amazon S3 as a collection point. Afterwards, the daemons are ready to accept a new job. A controller script sends all required information to the nodes, which is: S3 information, YCSB workload file and sampling interval.\
+\
+\
+
+\b\fs28 How to use the current implementation of BenchMon
+\b0\fs24 \
+\
+Only runs with python 2.7.x\
+
+\b \
+For YCSB: 
+\b0 you have to use the modified Measurements.java\
+\
+
+\b On one machine
+\b0  (does not need to be a dedicated machine. Use the one where you have installed YCSB)\
+- Install RabbitMQ\
+	- Download the deb file from http://www.rabbitmq.com, \
+	   e.g. http://www.rabbitmq.com/releases/rabbitmq-server/v3.1.3/rabbitmq-server_3.1.3-1_all.deb\
+	- sudo dpkg -i rabbitmq-server_3.1.3-1_all.deb\
+	- sudo apt-get -f install\
+\
+
+\b On each machine:\
+
+\b0 - Install pip, for ubuntu, that can be done using: sudo apt-get install python-pip\
+- Install the boto library for python: sudo pip install boto\
+- Install the pika library for python: sudo pip install pika\
+\
+The controller is just a script, that can be executed on your local machine\
+\
+
+\b On each machine, except for the controller
+\b0 \
+- Go to the home directory of the linux user, that will be executing the scripts\
+- Create a dir called BenchMon\
+- Create a dir called BenchMon/output\
+If you change anything from the last 3 steps, then you need to change all directory settings in each script\
+- In each script, you need to set the mqHost variable to the host IP where RabbitMQ is installed\
+\
+
+\b Run each script on every machine with the following command.
+\b0  \
+This kind of daemonizes the python script as it runs forever until it is stopped by force or on error.\
+- nohup python <script> <name/groupname> &\
+\
+In the name/groupname part you can specify a name for this node or script. With the Switcher.py script you can then easily turn monitoring functionality OFF or ON just by specifying the correct name. This is useful, e.g. if you have a base cluster of 3 nodes and some spare nodes that will be incorporated later in the benchmark.\
+\
+
+\b The BenchmarkController script
+\b0 \
+- Edit the following variables:\
+	- Configuration: bucketName (S3), monitoringDataDir (S3), mqHost, \
+	- Test-related: hosts (YCSB), historgramBuckets (YCSB), samplingInterval, beforePeriod, afterPeriod, testName\
+- Edit the ycsb-workload file\
+\
+\
+}
